@@ -17,6 +17,9 @@ public class DataAccess {
 	private Connection connection = null;
 	private PreparedStatement stmt = null;
 	private ResultSet re = null;
+	
+	private Vector<String> queries = new Vector<String>();
+	private Vector<String> queriesExplanation = new Vector<String>();
 
 	public DataAccess(String username, String password) {
 		this.username = username;
@@ -29,6 +32,35 @@ public class DataAccess {
 			System.out.println("Fail loading Driver!");
 			e.printStackTrace();
 		}
+		
+		String sql = "SELECT ht.TripTo, ht.DepartureDate "
+				+ "FROM hotel_trip as ht "
+				+ "INNER JOIN hotel as h on ht.HotelId = h.HotelId "
+				+ "WHERE h.hotelcity = 'Donostia'";
+		String name = "Trips that use hotels in Donostia";
+		
+		String sql2 = "SELECT AVG(trip.Numdays * trip.Ppday) "
+				+ "FROM trip "
+				+ "WHERE trip.CityDeparture = 'Donostia'";
+		String name2 = "Average price of the trips that depart " + 
+				"from Donostia";
+		
+		String sql3 = "SELECT c.custname, c.custaddress "
+				+ "from customer as c"
+				+ "where not exists (select * from hotel_trip_customer as htc "
+							+ "inner join hotel as h on "
+							+ "htc.HotelId = h.HotelId "
+							+ "where c.CustomerId = htc.CustomerId "
+							+ "and h.hotelname = 'Amara' and h.hotelcity = 'Donostia')";
+		String name3 = "Customers who have never gone on a trip using the hotel Amara in Donostia";
+		
+		queries.add(sql);
+		queries.add(sql2);
+		queries.add(sql3);
+		
+		queriesExplanation.add(name);
+		queriesExplanation.add(name2);
+		queriesExplanation.add(name3);
 	}
 
 	public void connection() {
@@ -95,8 +127,16 @@ public class DataAccess {
 		}
 	}
 	
+	public Vector<String> queries(){
+		return queriesExplanation;
+	}
+	
 	public Vector<Vector<String>> table(String table){
 		String sql = "SELECT * FROM " + table; 
+		return getAllRows(sql, null);
+	}
+	
+	private Vector<Vector<String>> getAllRows(String sql, Vector<String> a){
 		try {
 			stmt = connection.prepareStatement(sql);
 			re = stmt.executeQuery();
@@ -105,10 +145,12 @@ public class DataAccess {
 			ResultSetMetaData rsmd = re.getMetaData();
 			int columnsNumber = rsmd.getColumnCount();
 			
+			int j = 0;
 			while(re.next()) {
 				Vector<String> row = new Vector<String>();
 				for (int i = 1; i <= columnsNumber; i++) {
 					row.add(re.getString(i));
+					if (j == 0 && a != null) a.add(rsmd.getColumnName(i));
 				}
 				attributes.add(row);
 			}
@@ -119,4 +161,8 @@ public class DataAccess {
 		}
 	}
 
+	public Vector<Vector<String>> query(int i, Vector<String> attributes){
+		String sql = queries.elementAt(i);
+		return getAllRows(sql, attributes);
+	}
 }
