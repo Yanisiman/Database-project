@@ -6,7 +6,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.util.Map;
 import java.util.Vector;
+
 
 public class DataAccess {
 
@@ -54,13 +56,71 @@ public class DataAccess {
 							+ "and h.hotelname = 'Amara' and h.hotelcity = 'Donostia')";
 		String name3 = "Customers who have never gone on a trip using the hotel Amara in Donostia";
 		
+		String sql4 = "INSERT INTO EMPLOYEE VALUES (‘Richard’, ‘K’, ‘Marini’, ‘653298653’, "
+					+ "‘1962-12-30’, ’98 Oak Forest, Katy, TX’, ‘M’, 37000,‘987654321’, 4);"
+					+ "Select * from employee";
+		String name4 = "Add a new employee";
+		
+		String sql5 = "DELETE FROM EMPLOYEE WHERE DNO IN (SELECT DNUMBER"
+						+ " FROM DEPARTMENT WHERE DNAME = ‘Research’);";
+		String name5 = "Delete all employees working in the Research department";
+		
+		String sql6 = "UPDATE PROJECT SET PLOCATION = ‘Bellaire’, DNUM = 4 " 
+						+ "WHERE PNUMBER = 10;";
+		String name6 = "Change the location and controlling department number of project number 10";
+		
+		String sql7 = "UPDATE EMPLOYEE SET SALARY = SALARY * 1.1 "
+				 + "WHERE DNO IN (SELECT DNUMBER FROM DEPARTMENT " 
+				 + "WHERE DNAME = ‘Research’);";
+		String name7 = "Give all employees in the Research department a 10% raise in salary";
+		
+		String sql8 = "Delete from department where Dnumber = 4";
+		String name8 = "Delete department number 4";
+		
+		
+		String sql9 = "select ht.TripTo, ht.DepartureDate"
+				+ " from hotel_trip as ht inner join hotel as h on ht.HotelId = h.HotelId"
+				+ " group by ht.TripTo, ht.DepartureDate"
+				+ " having count(distinct h.hotelcity) = 1";
+		String name9 = "Retrieve the id of the trips in which all hotels offered (for " + 
+				"that trip) are in the same location";
+		
+		String sql10 = "select c.CustomerId, c.custname, count(*)"
+				+ " from hotel_trip_customer as htc inner join customer as c on"
+				+ " htc.CustomerId = c.CustomerId where c.CustomerId not in"
+				+ " (select htc1.CustomerId from hotel_trip_customer as htc1"
+				+ " where htc.CustomerID = htc1.CustomerID and htc1.TripTo <> 'Madrid')"
+				+ " group by c.CustomerId, c.custname";
+		String name10 = "For each customer who has travelled ONLY to Madrid, print out\r\n" + 
+				"his/her name and the number of trips to that city.";
+		
+		String sql11 = "select count(distinct f.restaurname) as N_restaurants"
+				+ " from hotel_trip_customer as htc inner join person as p"
+				+ " on htc.CustomerId = p.id inner join frequents as f on p.nameid = f.nameid";
+		String name11 = "Retrieve the number of different restaurants frequented\r\n" + 
+				"by people in trips.";
+		
 		queries.add(sql);
 		queries.add(sql2);
 		queries.add(sql3);
+		queries.add(sql4);
+		queries.add(sql7);
+		queries.add(sql5);
+		queries.add(sql6);
+		queries.add(sql8);
+		queries.add(sql9);
+		queries.add(sql10);
 		
 		queriesExplanation.add(name);
 		queriesExplanation.add(name2);
 		queriesExplanation.add(name3);
+		queriesExplanation.add(name4);
+		queriesExplanation.add(name5);
+		queriesExplanation.add(name6);
+		queriesExplanation.add(name7);
+		queriesExplanation.add(name8);
+		queriesExplanation.add(name9);
+		queriesExplanation.add(name10);
 	}
 
 	public void connection() {
@@ -164,5 +224,40 @@ public class DataAccess {
 	public Vector<Vector<String>> query(int i, Vector<String> attributes){
 		String sql = queries.elementAt(i);
 		return getAllRows(sql, attributes);
+	}
+	
+	
+	public boolean insert(Map<String, String> m) {
+		String sql = "INSERT TO " + m.get("table") +"(" + String.join(",", (Iterable<? extends CharSequence>) m.entrySet().iterator())
+		+ ") VALUES(" + String.join(",", m.values()) + ")";
+		
+		try {
+			stmt = connection.prepareStatement(sql);
+			stmt.executeUpdate(sql);
+			return true;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}		
+	}
+	
+	public boolean update() {
+		String sql = "Update table set attribute where attribute=";
+		try {
+			return true;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	public boolean delete() {
+		String sql = "Delete from table where";
+		try {
+			return true;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 }
