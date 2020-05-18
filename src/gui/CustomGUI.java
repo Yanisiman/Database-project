@@ -1,12 +1,15 @@
 package gui;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.EventQueue;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.CellEditorListener;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellEditor;
 
 import businessLogic.BusinessFacade;
 import java.awt.GridBagLayout;
@@ -15,6 +18,9 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
+import java.util.EventObject;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Vector;
 
 import javax.swing.JTable;
@@ -24,27 +30,35 @@ import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import javax.swing.JButton;
 
-public class TablesGUI extends JFrame {
+public class CustomGUI extends JFrame {
 
 	private JPanel contentPane;
 	private JComboBox<String> tableComboBox = new JComboBox<String>();
 	private final JScrollPane scrollPane = new JScrollPane();
+	private String[] columnNames = new String[] {};
 	private final JTable table = new JTable();
 	
-	private String[] columnNames = new String[] {};
-	private DefaultTableModel tableModel = new DefaultTableModel(null, columnNames);
+	
+	private DefaultTableModel tableModel = new DefaultTableModel(null, columnNames) {
+	
+		@Override
+		public boolean isCellEditable(int rowIndex, int columnIndex) {
+            return columnIndex == 1;
+        }		
+	};
 
 	private BusinessFacade bl;
-	private TablesGUI self;
+	private CustomGUI self;
 	private QueriesGUI queriesGUI;
 	private final JButton backBtn = new JButton("Go back");
+	private final JButton insertBtn = new JButton("Insert");
 	
 	
 
 	/**
 	 * Create the frame.
 	 */
-	public TablesGUI(BusinessFacade bl) {
+	public CustomGUI(BusinessFacade bl) {
 		this.bl = bl;
 		this.self = this;
 		
@@ -84,7 +98,7 @@ public class TablesGUI extends JFrame {
 		contentPane.add(scrollPane, gbc_scrollPane);
 		scrollPane.setViewportView(table);
 		
-		table.setDefaultEditor(Object.class, null);
+		//table.setDefaultEditor(Object.class, null);
 		table.setModel(tableModel);
 		
 		Vector<String> tables = bl.displayTables();
@@ -99,10 +113,30 @@ public class TablesGUI extends JFrame {
 		backBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				self.setVisible(false);
-				queriesGUI.setTablesGUI(self);
+				//queriesGUI.setTablesGUI(self);
 				queriesGUI.setVisible(true);
 			}
 		});
+		
+		GridBagConstraints gbc_insertBtn = new GridBagConstraints();
+		gbc_insertBtn.fill = GridBagConstraints.HORIZONTAL;
+		gbc_insertBtn.gridwidth = 2;
+		gbc_insertBtn.insets = new Insets(0, 0, 5, 5);
+		gbc_insertBtn.gridx = 2;
+		gbc_insertBtn.gridy = 11;
+		insertBtn.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				HashMap<String, String> insert = new HashMap<String, String>();
+				String tableName = (String) tableComboBox.getSelectedItem();
+				insert.put("table", tableName);
+				for (int i = 0; i < table.getRowCount(); i++) {
+					if (!((String) table.getValueAt(i, 1)).equals(""))
+						insert.put((String) table.getValueAt(i, 0), (String) table.getValueAt(i, 1));
+				}
+				bl.insert(insert);					
+			}
+		});
+		contentPane.add(insertBtn, gbc_insertBtn);
 		contentPane.add(backBtn, gbc_backBtn);
 		displayTable(tables.firstElement());
 		
@@ -110,10 +144,15 @@ public class TablesGUI extends JFrame {
 	
 	private void displayTable(String table) {
 		Vector<String> attributes =  bl.displayAttributeTable(table);
-		tableModel.setDataVector(null, attributes);
-		Vector<Vector<String>> t = bl.table(table);
-		for (Vector<String> e : t) {
-			tableModel.addRow(e);
+		Vector<String> t = new Vector<String>();
+		t.add("Attributes");
+		t.add("Values");
+		tableModel.setDataVector(null, t);
+		for (String e : attributes) {
+			Vector<String> row = new Vector<String>();
+			row.add(e);
+			row.add("");
+			tableModel.addRow(row);
 		}
 		
 	}

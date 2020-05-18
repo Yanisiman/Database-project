@@ -8,7 +8,7 @@ public class ApplicationLauncher {
 		/*ConnectDatabaseGUI connectDatabaseGUI = new ConnectDatabaseGUI();
 		connectDatabaseGUI.setVisible(true);*/
 		
-		BusinessFacade bl = new BusinessFacade("DBDI05", "zwV4Y9Mk");
+		BusinessFacade bl = new BusinessFacade("DBDI05", "DBDI05");
 		LoginGUI loginGUI = new LoginGUI(bl);
 		loginGUI.setVisible(true);
 		

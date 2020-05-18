@@ -6,6 +6,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Vector;
 
@@ -47,34 +48,35 @@ public class DataAccess {
 		String name2 = "Average price of the trips that depart " + 
 				"from Donostia";
 		
-		String sql3 = "SELECT c.custname, c.custaddress "
-				+ "from customer as c"
+		String sql3 = "SELECT c.custname, c.custaddress from customer as c "
 				+ "where not exists (select * from hotel_trip_customer as htc "
-							+ "inner join hotel as h on "
-							+ "htc.HotelId = h.HotelId "
-							+ "where c.CustomerId = htc.CustomerId "
-							+ "and h.hotelname = 'Amara' and h.hotelcity = 'Donostia')";
+				+ "inner join hotel as h on htc.HotelId = h.HotelId where c.CustomerId = htc.CustomerId "
+				+ "and h.hotelname = 'Amara' and h.hotelcity = 'Donostia')";
 		String name3 = "Customers who have never gone on a trip using the hotel Amara in Donostia";
 		
-		String sql4 = "INSERT INTO EMPLOYEE VALUES (‘Richard’, ‘K’, ‘Marini’, ‘653298653’, "
-					+ "‘1962-12-30’, ’98 Oak Forest, Katy, TX’, ‘M’, 37000,‘987654321’, 4);"
+		String sql4 = "insert INTO EMPLOYEE VALUES ('Richard', 'K', 'Marini', '653298653', "
+					+ "'30/12/1962', '98 Oak Forest, Katy, TX', 'M', 37000,'987654321', 4);"
 					+ "Select * from employee";
 		String name4 = "Add a new employee";
 		
-		String sql5 = "DELETE FROM EMPLOYEE WHERE DNO IN (SELECT DNUMBER"
-						+ " FROM DEPARTMENT WHERE DNAME = ‘Research’);";
+		String sql5 = "delete FROM EMPLOYEE WHERE DNO IN (SELECT DNUMBER"
+						+ " FROM DEPARTMENT WHERE DNAME = 'Research');"
+						+ "Select * from employee";
 		String name5 = "Delete all employees working in the Research department";
 		
-		String sql6 = "UPDATE PROJECT SET PLOCATION = ‘Bellaire’, DNUM = 4 " 
-						+ "WHERE PNUMBER = 10;";
+		String sql6 = "update PROJECT SET PLOCATION = 'Bellaire', DNUM = 4 " 
+						+ "WHERE PNUMBER = 10;"
+						+ "Select * from project";
 		String name6 = "Change the location and controlling department number of project number 10";
 		
-		String sql7 = "UPDATE EMPLOYEE SET SALARY = SALARY * 1.1 "
+		String sql7 = "update EMPLOYEE SET SALARY = SALARY * 1.1 "
 				 + "WHERE DNO IN (SELECT DNUMBER FROM DEPARTMENT " 
-				 + "WHERE DNAME = ‘Research’);";
+				 + "WHERE DNAME = 'Research');"
+				 + "Select * from employee";
 		String name7 = "Give all employees in the Research department a 10% raise in salary";
 		
-		String sql8 = "Delete from department where Dnumber = 4";
+		String sql8 = "delete from department where Dnumber = 4"
+					+ "Select * from department";
 		String name8 = "Delete department number 4";
 		
 		
@@ -91,22 +93,22 @@ public class DataAccess {
 				+ " (select htc1.CustomerId from hotel_trip_customer as htc1"
 				+ " where htc.CustomerID = htc1.CustomerID and htc1.TripTo <> 'Madrid')"
 				+ " group by c.CustomerId, c.custname";
-		String name10 = "For each customer who has travelled ONLY to Madrid, print out\r\n" + 
+		String name10 = "For each customer who has travelled ONLY to Madrid, print out " + 
 				"his/her name and the number of trips to that city.";
 		
 		String sql11 = "select count(distinct f.restaurname) as N_restaurants"
 				+ " from hotel_trip_customer as htc inner join person as p"
 				+ " on htc.CustomerId = p.id inner join frequents as f on p.nameid = f.nameid";
-		String name11 = "Retrieve the number of different restaurants frequented\r\n" + 
+		String name11 = "Retrieve the number of different restaurants frequented " + 
 				"by people in trips.";
 		
 		queries.add(sql);
 		queries.add(sql2);
 		queries.add(sql3);
 		queries.add(sql4);
-		queries.add(sql7);
 		queries.add(sql5);
 		queries.add(sql6);
+		queries.add(sql7);
 		queries.add(sql8);
 		queries.add(sql9);
 		queries.add(sql10);
@@ -207,12 +209,15 @@ public class DataAccess {
 			
 			int j = 0;
 			while(re.next()) {
+				
 				Vector<String> row = new Vector<String>();
 				for (int i = 1; i <= columnsNumber; i++) {
 					row.add(re.getString(i));
-					if (j == 0 && a != null) a.add(rsmd.getColumnName(i));
+					if (j == 0 && a != null)
+						a.add(rsmd.getColumnName(i));
 				}
 				attributes.add(row);
+				j += 1;
 			}
 			return attributes;
 		} catch (Exception e) {
@@ -220,15 +225,30 @@ public class DataAccess {
 			return null;
 		}
 	}
+	
+	private void queryChanges(String sql) {
+		try {
+			stmt.executeUpdate(sql);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 
 	public Vector<Vector<String>> query(int i, Vector<String> attributes){
 		String sql = queries.elementAt(i);
-		return getAllRows(sql, attributes);
+		if (sql.startsWith("insert") || sql.startsWith("update") || sql.startsWith("delete")) {
+			String[] splits = sql.split(";");
+			queryChanges(splits[0]);
+			sql = splits[1];
+		}
+		return getAllRows(sql, attributes);		
 	}
 	
 	
-	public boolean insert(Map<String, String> m) {
-		String sql = "INSERT TO " + m.get("table") +"(" + String.join(",", (Iterable<? extends CharSequence>) m.entrySet().iterator())
+	public boolean insert(HashMap<String, String> m) {
+		String table = m.get("table");
+		m.remove("table");
+		String sql = "insert into " + table +"(" + String.join(",", m.keySet())
 		+ ") VALUES(" + String.join(",", m.values()) + ")";
 		
 		try {
