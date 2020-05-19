@@ -261,19 +261,25 @@ public class DataAccess {
 		}		
 	}
 	
-	public boolean update() {
-		String sql = "Update table set attribute where attribute=";
+	public boolean update(String table, Vector<String> m) {
+		
+		String sql = "update " + table +" set " + String.join(", ", m) + " where " + m.firstElement();
+		
 		try {
+			stmt = connection.prepareStatement(sql);
+			stmt.executeUpdate(sql);
 			return true;
-		} catch (Exception e) {
+		} catch (SQLException e) {
 			e.printStackTrace();
 			return false;
-		}
+		}		
 	}
 	
-	public boolean delete() {
-		String sql = "Delete from table where";
+	public boolean delete(String table, String attribute, String value) {
+		String sql = "Delete from " + table + " where " + attribute + " = " + value;
 		try {
+			stmt = connection.prepareStatement(sql);
+			stmt.executeUpdate(sql);
 			return true;
 		} catch (Exception e) {
 			e.printStackTrace();

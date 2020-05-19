@@ -56,6 +56,16 @@ public class BusinessFacade {
 		return valid;
 	}
 	
+	public boolean update(String table, Vector<String> m) {
+		boolean valid = db.update(table, m);
+		return valid;
+	}
+	
+	public boolean delete(String table, String attribute, String value) {
+		boolean valid = db.delete(table, attribute, value);
+		return valid;
+	}
+	
 	public void close() {
 		db.close();
 	}

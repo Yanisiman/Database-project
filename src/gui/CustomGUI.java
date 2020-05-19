@@ -29,6 +29,7 @@ import javax.swing.JScrollPane;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import javax.swing.JButton;
+import javax.swing.JTextArea;
 
 public class CustomGUI extends JFrame {
 
@@ -52,6 +53,7 @@ public class CustomGUI extends JFrame {
 	private QueriesGUI queriesGUI;
 	private final JButton backBtn = new JButton("Go back");
 	private final JButton insertBtn = new JButton("Insert");
+	private final JTextArea textArea = new JTextArea();
 	
 	
 
@@ -69,9 +71,9 @@ public class CustomGUI extends JFrame {
 		setContentPane(contentPane);
 		GridBagLayout gbl_contentPane = new GridBagLayout();
 		gbl_contentPane.columnWidths = new int[]{81, 161, 186, 178, 202, 89, 0};
-		gbl_contentPane.rowHeights = new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 82, 0, 38, 0, 0};
-		gbl_contentPane.columnWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 1.0, Double.MIN_VALUE};
-		gbl_contentPane.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, Double.MIN_VALUE};
+		gbl_contentPane.rowHeights = new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 82, 0, 38, 37, 0, 0};
+		gbl_contentPane.columnWeights = new double[]{0.0, 0.0, 1.0, 0.0, 0.0, 1.0, Double.MIN_VALUE};
+		gbl_contentPane.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, Double.MIN_VALUE};
 		contentPane.setLayout(gbl_contentPane);
 		
 		GridBagConstraints gbc_tableComboBox = new GridBagConstraints();
@@ -94,11 +96,9 @@ public class CustomGUI extends JFrame {
 		gbc_scrollPane.insets = new Insets(0, 0, 5, 5);
 		gbc_scrollPane.fill = GridBagConstraints.BOTH;
 		gbc_scrollPane.gridx = 1;
-		gbc_scrollPane.gridy = 6;
+		gbc_scrollPane.gridy = 5;
 		contentPane.add(scrollPane, gbc_scrollPane);
 		scrollPane.setViewportView(table);
-		
-		//table.setDefaultEditor(Object.class, null);
 		table.setModel(tableModel);
 		
 		Vector<String> tables = bl.displayTables();
@@ -109,7 +109,7 @@ public class CustomGUI extends JFrame {
 		gbc_backBtn.gridwidth = 2;
 		gbc_backBtn.insets = new Insets(0, 0, 5, 5);
 		gbc_backBtn.gridx = 2;
-		gbc_backBtn.gridy = 12;
+		gbc_backBtn.gridy = 11;
 		backBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				self.setVisible(false);
@@ -123,21 +123,42 @@ public class CustomGUI extends JFrame {
 		gbc_insertBtn.gridwidth = 2;
 		gbc_insertBtn.insets = new Insets(0, 0, 5, 5);
 		gbc_insertBtn.gridx = 2;
-		gbc_insertBtn.gridy = 11;
+		gbc_insertBtn.gridy = 10;
 		insertBtn.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				HashMap<String, String> insert = new HashMap<String, String>();
 				String tableName = (String) tableComboBox.getSelectedItem();
 				insert.put("table", tableName);
 				for (int i = 0; i < table.getRowCount(); i++) {
-					if (!((String) table.getValueAt(i, 1)).equals(""))
-						insert.put((String) table.getValueAt(i, 0), (String) table.getValueAt(i, 1));
+					if (!((String) table.getValueAt(i, 1)).equals("")) {
+						String value = (String) table.getValueAt(i, 1);
+						try {
+							Integer.parseInt(value);
+						}
+						catch (Exception ex) {
+							value = "'" + value + "'";
+						}
+						finally {
+							insert.put((String) table.getValueAt(i, 0), value);
+						}
+					}						
 				}
-				bl.insert(insert);					
+				if (bl.insert(insert))
+					textArea.setText("You inserted correctly new data in the database !");
+				else
+					textArea.setText("Something went wrong during the insertion !");
 			}
 		});
 		contentPane.add(insertBtn, gbc_insertBtn);
 		contentPane.add(backBtn, gbc_backBtn);
+		
+		GridBagConstraints gbc_textArea = new GridBagConstraints();
+		gbc_textArea.gridwidth = 2;
+		gbc_textArea.insets = new Insets(0, 0, 5, 5);
+		gbc_textArea.fill = GridBagConstraints.BOTH;
+		gbc_textArea.gridx = 2;
+		gbc_textArea.gridy = 12;
+		contentPane.add(textArea, gbc_textArea);
 		displayTable(tables.firstElement());
 		
 	}

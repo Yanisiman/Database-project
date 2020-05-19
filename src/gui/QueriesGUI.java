@@ -72,6 +72,7 @@ public class QueriesGUI extends JFrame {
 				}
 				else {
 					self.tablesGUI.setVisible(true);
+					self.tablesGUI.displayTable("");
 				}
 				
 			}
